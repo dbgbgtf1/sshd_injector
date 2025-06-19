@@ -1,0 +1,38 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./include",
+      "-fpie",
+      "-fstack-protector",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-o",
+      "build/trace.c.o",
+      "src/trace.c"
+    ],
+    "directory": "/home/dbgbgtf/Main/work/inject",
+    "file": "/home/dbgbgtf/Main/work/inject/src/trace.c",
+    "output": "/home/dbgbgtf/Main/work/inject/build/trace.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./include",
+      "-fpie",
+      "-fstack-protector",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-o",
+      "build/injector.c.o",
+      "src/injector.c"
+    ],
+    "directory": "/home/dbgbgtf/Main/work/inject",
+    "file": "/home/dbgbgtf/Main/work/inject/src/injector.c",
+    "output": "/home/dbgbgtf/Main/work/inject/build/injector.c.o"
+  }
+]
