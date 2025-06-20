@@ -111,9 +111,6 @@ at_syscall (uint32_t pid)
   inject_code (pid, rax, shell_code);
   // inject code into rax
 
-  break_at_sys_nr (pid, 0xa);
-  // break at mprotect
-
   for (uint32_t i = 0; i < 7; i++)
     next_step (pid);
   regs.rip = rax;
