@@ -2,3 +2,4 @@ a.out
 test.c
 .gdb_history
 build/
+__pycache__

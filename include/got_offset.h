@@ -1,0 +1,8 @@
+#ifndef GOT_OFFSET
+#define GOT_OFFSET
+
+#include <stdint.h>
+uint64_t accept_offset = 0x5d8f8;
+
+uint64_t __libc_start_main_offset = 0x5daa0;
+#endif

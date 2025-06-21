@@ -1,8 +1,8 @@
 #ifndef LOG
 #define LOG
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define PERROR(s)                                                             \
   {                                                                           \
