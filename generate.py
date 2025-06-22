@@ -1,29 +1,27 @@
 from pwn import *
-from elftools.elf.elffile import ELFFile
+# from elftools.elf.elffile import ELFFile
 elf_name = './sshd'
 context.arch = 'amd64'
+sshd = ELF(elf_name)
 
 def get_got_offset (func: str) -> int:
-    elf = ELF(elf_name)
-    return int(str(elf.got.get(func)))
+    return sshd.got[func]
 
 def get_seg_pad(flag: int) -> int:
-    filesz = 0
-    memsz = 0
+    mem_len = 0
+    mem_size = 0
 
-    with open(elf_name, 'rb') as f:
-        elf = ELFFile(f)
-        for segment in elf.iter_segments():
-            if segment['p_type'] == 'PT_LOAD':
-                if (segment['p_flags'] == flag):
-                    filesz = segment['p_filesz']
-                    break
-                memsz += (segment['p_memsz'] & ~0xfff) + 0x1000
+    for segment in sshd.iter_segments():
+        if segment['p_type'] == 'PT_LOAD':
+            if (segment['p_flags'] == flag):
+                mem_len = segment['p_memsz']
+                break
+            mem_size += (segment['p_memsz'] & ~0xfff) + 0x1000
 
-    if filesz == 0:
+    if mem_len == 0:
         print("segment with flag not found")
-        exit()
-    return filesz + memsz
+        exit(1)
+    return mem_len + mem_size
 
 accept_offset = get_got_offset ('accept')
 __errno_location_offset = get_got_offset ('__errno_location')
@@ -38,10 +36,8 @@ with open ('./include/got_offset.h', 'w') as f:
     f.write('uint64_t __libc_start_main_offset = ' + str(hex(__libc_start_main_offset)) + ';\n\n')
     f.write('#endif\n')
 
-# rw_gap = get_seg_pad(6)
-rw_gap = 0x5e000
+rw_gap = (get_seg_pad(6) & ~0x7) + 0x8
 rx_gap = (get_seg_pad(5) & ~0x7) + 0x8
-# r_gap = get_seg_pad(4)
 
 with open('./include/seg_gaps.h', 'w') as f:
     f.write('#ifndef SEG_GAPS\n')

@@ -29,7 +29,6 @@ DEST_DIR ?=
 all: injector
 
 injector: $(OBJS)
-	python generate.py
 	$(CC) $(LDFLAGS) $^ -o $@
 	mv -f $@ $(BUILD_DIR)
 	@echo "injector is baked"
