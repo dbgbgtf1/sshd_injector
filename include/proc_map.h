@@ -1,5 +1,5 @@
-#ifndef ELF_BASE
-#define ELF_BASE
+#ifndef PROC_MAP
+#define PROC_MAP
 
 #include <stdint.h>
 #include <sys/mman.h>

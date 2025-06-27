@@ -7,15 +7,15 @@
       "-fstack-protector",
       "-Wall",
       "-Wextra",
-      "-O2",
+      "-g",
       "-c",
       "-o",
-      "build/trace.c.o",
-      "src/trace.c"
+      "build/seg_gap.c.o",
+      "src/seg_gap.c"
     ],
-    "directory": "/home/dbgbgtf/Main/work/inject",
-    "file": "/home/dbgbgtf/Main/work/inject/src/trace.c",
-    "output": "/home/dbgbgtf/Main/work/inject/build/trace.c.o"
+    "directory": "/home/dbgbgtf/Main/work/sshd_injector",
+    "file": "/home/dbgbgtf/Main/work/sshd_injector/src/seg_gap.c",
+    "output": "/home/dbgbgtf/Main/work/sshd_injector/build/seg_gap.c.o"
   },
   {
     "arguments": [
@@ -25,14 +25,68 @@
       "-fstack-protector",
       "-Wall",
       "-Wextra",
-      "-O2",
+      "-g",
+      "-c",
+      "-o",
+      "build/proc_map.c.o",
+      "src/proc_map.c"
+    ],
+    "directory": "/home/dbgbgtf/Main/work/sshd_injector",
+    "file": "/home/dbgbgtf/Main/work/sshd_injector/src/proc_map.c",
+    "output": "/home/dbgbgtf/Main/work/sshd_injector/build/proc_map.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./include",
+      "-fpie",
+      "-fstack-protector",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-c",
+      "-o",
+      "build/trace_utils.c.o",
+      "src/trace_utils.c"
+    ],
+    "directory": "/home/dbgbgtf/Main/work/sshd_injector",
+    "file": "/home/dbgbgtf/Main/work/sshd_injector/src/trace_utils.c",
+    "output": "/home/dbgbgtf/Main/work/sshd_injector/build/trace_utils.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./include",
+      "-fpie",
+      "-fstack-protector",
+      "-Wall",
+      "-Wextra",
+      "-g",
       "-c",
       "-o",
       "build/injector.c.o",
       "src/injector.c"
     ],
-    "directory": "/home/dbgbgtf/Main/work/inject",
-    "file": "/home/dbgbgtf/Main/work/inject/src/injector.c",
-    "output": "/home/dbgbgtf/Main/work/inject/build/injector.c.o"
+    "directory": "/home/dbgbgtf/Main/work/sshd_injector",
+    "file": "/home/dbgbgtf/Main/work/sshd_injector/src/injector.c",
+    "output": "/home/dbgbgtf/Main/work/sshd_injector/build/injector.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./include",
+      "-fpie",
+      "-fstack-protector",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-c",
+      "-o",
+      "build/got_offset.c.o",
+      "src/got_offset.c"
+    ],
+    "directory": "/home/dbgbgtf/Main/work/sshd_injector",
+    "file": "/home/dbgbgtf/Main/work/sshd_injector/src/got_offset.c",
+    "output": "/home/dbgbgtf/Main/work/sshd_injector/build/got_offset.c.o"
   }
 ]

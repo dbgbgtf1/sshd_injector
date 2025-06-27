@@ -27,3 +27,5 @@ A stupid and undone tools to inject some system proc
 - bash的重定向最好要有加密，否则在流量上也容易引起怀疑
 
 - 还有就是没有考虑到可能需要重复注入，目前想要重新注入只能重启sshd服务
+
+总的来说，上面这些东西想通过再注入sshd-session来解决

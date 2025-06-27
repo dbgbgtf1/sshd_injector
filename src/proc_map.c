@@ -11,6 +11,7 @@ open_proc_map (uint64_t pid)
 {
   char proc_map_path[0x20];
   snprintf (proc_map_path, 0x20, "/proc/%ld/maps", pid);
+  // sprintf (proc_map_path, "/proc/%d/maps", pid);
   FILE *f = fopen (proc_map_path, "r");
   return f;
 }

@@ -1,4 +1,4 @@
-#include "trace.h"
+#include "trace_utils.h"
 #include "log.h"
 #include <linux/ptrace.h>
 #include <stdbool.h>
