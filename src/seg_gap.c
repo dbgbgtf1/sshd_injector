@@ -3,8 +3,6 @@
 #include <fcntl.h>
 #include <gelf.h>
 #include <libelf.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 uint64_t
