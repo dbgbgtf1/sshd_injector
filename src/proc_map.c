@@ -19,16 +19,16 @@ open_proc_map (uint64_t pid)
 uint64_t
 parse_maps (uint32_t pid, char *flag)
 {
-  uint64_t elf_base;
+  uint64_t sshd_base;
   char *buf;
   uint64_t len = 0;
 
   FILE *f = open_proc_map (pid);
   getline (&buf, &len, f);
 
-  elf_base = strtoull (buf, NULL, 16);
-  if (elf_base == 0)
-    PEXIT ("error parsing parse_elf_base");
+  sshd_base = strtoull (buf, NULL, 16);
+  if (sshd_base == 0)
+    PEXIT ("error parsing parse_sshd_base");
 
   do
     {
@@ -40,5 +40,5 @@ parse_maps (uint32_t pid, char *flag)
   free (buf);
   fclose (f);
 
-  return elf_base;
+  return sshd_base;
 }

@@ -12,7 +12,7 @@ get_seg_gap (const char *elf_file, int flag)
 {
   int fd;
   Elf *elf;
-  size_t phnum;
+  uint64_t phnum;
   GElf_Phdr phdr;
   uint64_t i;
 

@@ -1,40 +1,34 @@
-c_asm = ""
+from os import popen
+from pwn import *
 
-with open ('./include/sshd_accept.s', 'r') as src:
-    with open ('./include/sshd_accept.h', 'w') as res:
-        line = src.readline().replace ('\n', ';')
-        while line:
-            c_asm += line
-            line = src.readline ().replace ('\n', ';')
+os.system("gcc -fno-asynchronous-unwind-tables -O1 sshd_execv_hook.c -masm=intel -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -o sshd_execv_hook")
+os.system("objcopy -O binary -j .text sshd_execv_hook sshd_execv_hook.bin")
 
-        res.write ('#ifndef SSHD_SCCEPT\n')
-        res.write ('#define SSHD_SCCEPT\n\n')
+encode = b''
+with open ('./sshd_execv_hook.bin', 'rb') as f:
+    encode += f.read1()
+c_asm = "".join([f"\\x{i:02x}" for i in encode])
 
-        res.write (f'char sshd_accept[] = "{c_asm}";\n\n')
+with open ('./include/sshd_execv_hook.h', 'w') as res:
+    res.write ('#ifndef SSHD_EXECV\n')
+    res.write ('#define SSHD_EXECV\n\n')
 
-        res.write (f'#endif')
+    res.write (f'char sshd_execv[] = "{c_asm}";\n\n')
 
-c_asm = ""
-line = ""
+    res.write (f'#endif')
 
-with open ('./include/sshd_execve.s', 'r') as src:
-    with open ('./include/sshd_execve.h', 'w') as res:
-        pid = "4"
-        map_str = "8"
-        session_elf_base = "8"
-        code_start = "0x10"
-        line = src.readline().replace ('\n', ';')
-        while line:
-            c_asm += line
-            line = src.readline ().replace ('\n', ';')
-            if line.startswith ('//'):
-                line = ";"
-            line = line.format_map (locals ())
+os.system("gcc -fno-asynchronous-unwind-tables -O1 sshd_accept_hook.c -masm=intel -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -o sshd_accept_hook")
+os.system("objcopy -O binary -j .text sshd_accept_hook sshd_accept_hook.bin")
 
-        res.write ('#ifndef SSHD_EXECVE\n')
-        res.write ('#define SSHD_EXECVE\n\n')
+encode = b''
+with open ('./sshd_accept_hook.bin', 'rb') as f:
+    encode += f.read1()
+c_asm = "".join([f"\\x{i:02x}" for i in encode])
 
-        res.write (f'char sshd_execve[] = "{c_asm}";\n\n')
+with open ('./include/sshd_accept.h', 'w') as res:
+    res.write ('#ifndef SSHD_ACCEPT\n')
+    res.write ('#define SSHD_ACCEPT\n\n')
 
-        res.write (f'#endif')
+    res.write (f'char sshd_accept[] = "{c_asm}";\n\n')
 
+    res.write (f'#endif')

@@ -23,7 +23,7 @@ get_got_offset (const char *elf_file, const char *func_name)
   if (!elf)
     PERROR ("elf begine");
 
-  size_t shstrndx;
+  uint64_t shstrndx;
   if (elf_getshdrstrndx (elf, &shstrndx) != 0)
     PERROR ("elf_getshdrstrndx");
 
@@ -57,11 +57,11 @@ get_got_offset (const char *elf_file, const char *func_name)
   if (!dynsym_scn || !dynstr || !reloc_scn)
     PERROR ("Missing sections in elf");
 
-  size_t symbol_count = dynsym_data->d_size / sizeof (GElf_Sym);
+  uint64_t symbol_count = dynsym_data->d_size / sizeof (GElf_Sym);
 
   int target_sym_index = -1;
 
-  for (size_t i = 0; i < symbol_count; ++i)
+  for (uint64_t i = 0; i < symbol_count; ++i)
     {
       GElf_Sym sym;
       gelf_getsym (dynsym_data, i, &sym);
@@ -76,8 +76,8 @@ get_got_offset (const char *elf_file, const char *func_name)
   if (target_sym_index < 0)
     PEXIT ("function not found in .dynsym");
 
-  size_t reloc_count = reloc_data->d_size / sizeof (GElf_Rela);
-  for (size_t i = 0; i < reloc_count; ++i)
+  uint64_t reloc_count = reloc_data->d_size / sizeof (GElf_Rela);
+  for (uint64_t i = 0; i < reloc_count; ++i)
     {
       GElf_Rela rela;
       gelf_getrela (reloc_data, i, &rela);

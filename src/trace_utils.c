@@ -11,13 +11,13 @@
 #include <sys/wait.h>
 
 void
-copy_to_traee (uint32_t pid, size_t addr, char *data, uint32_t len)
+copy_to_tracee (uint32_t pid, uint64_t addr, uint8_t *data, uint32_t len)
 {
-  size_t ptr = 0;
+  uint64_t ptr = 0;
 
   while (ptr < len)
     {
-      size_t data_cur = ((size_t *)data)[ptr / sizeof (size_t)];
+      uint64_t data_cur = ((uint64_t *)data)[ptr / sizeof (uint64_t)];
       if (ptrace (PTRACE_POKETEXT, pid, addr + ptr, data_cur) == -1)
         PERROR (TRACE_POKEDATA);
       ptr += 8;
@@ -25,14 +25,14 @@ copy_to_traee (uint32_t pid, size_t addr, char *data, uint32_t len)
 }
 
 void
-copy_from_tracee (uint32_t pid, size_t addr, char *data, uint32_t len)
+copy_from_tracee (uint32_t pid, uint64_t addr, char *data, uint32_t len)
 {
-  size_t ptr = 0;
+  uint64_t ptr = 0;
 
   while (ptr < len)
     {
-      size_t data_cur = ptrace (PTRACE_PEEKTEXT, pid, addr + ptr, NULL);
-      ((size_t *)data)[ptr / sizeof (size_t)] = data_cur;
+      uint64_t data_cur = ptrace (PTRACE_PEEKTEXT, pid, addr + ptr, NULL);
+      ((uint64_t *)data)[ptr / sizeof (uint64_t)] = data_cur;
       ptr += 8;
     }
 }
@@ -94,7 +94,7 @@ get_syscall_info (uint32_t pid, struct ptrace_syscall_info *info)
     PERROR (TRACE_GET_SYSCALL_INFO);
 }
 
-size_t
+uint64_t
 break_at_sys_nr (uint32_t pid, uint32_t syscall_nr)
 {
   struct ptrace_syscall_info info;
