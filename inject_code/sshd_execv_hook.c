@@ -66,6 +66,7 @@ execv_hook (const char *path, char *const argv[])
       sys_execve (path, argv);
     }
 
+  sys_wait (pid);
   sys_ptrace (PTRACE_SETOPTIONS, pid, NULL, (void *)PTRACE_O_TRACESYSGOOD);
   set_my_pubkey (pid);
   set_my_pubkey (pid);
