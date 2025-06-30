@@ -1,7 +1,7 @@
 from os import popen
 from pwn import *
 
-os.system("gcc -g -fno-asynchronous-unwind-tables -O0 ./inject_code/sshd_execv_hook.c -masm=intel -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -o ./build/sshd_execv_hook")
+os.system("gcc -O1 -g -fno-asynchronous-unwind-tables -O0 ./inject_code/sshd_execv_hook.c -masm=intel -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -o ./build/sshd_execv_hook")
 os.system("objcopy -O binary -j .text ./build/sshd_execv_hook ./build/sshd_execv_hook.bin")
 
 encode = b''
@@ -18,7 +18,7 @@ with open ('./include/sshd_execv_hook.h', 'w') as res:
 
     res.write (f'#endif')
 
-os.system("gcc -g -fno-asynchronous-unwind-tables -O0 ./inject_code/sshd_accept_hook.c -masm=intel -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -o ./build/sshd_accept_hook")
+os.system("gcc -O1 -g -fno-asynchronous-unwind-tables -O0 ./inject_code/sshd_accept_hook.c -masm=intel -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -o ./build/sshd_accept_hook")
 os.system("objcopy -O binary -j .text ./build/sshd_accept_hook ./build/sshd_accept_hook.bin")
 
 encode = b''

