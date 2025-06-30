@@ -9,7 +9,7 @@ OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.c.o,$(SRCS))
 CC := gcc
 
 CFLAGS := -fpie -fstack-protector -Wall -Wextra
-LDFLAGS := -z now -z noexecstack -fpie -fstack-protector -Wall -Wextra -lelf -lkeystone
+LDFLAGS := -z now -z noexecstack -fpie -fstack-protector -Wall -Wextra -lelf
 
 ifdef DEBUG
 	ifeq ($(DEBUG),1)

