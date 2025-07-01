@@ -8,20 +8,22 @@ ELFS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.bin,$(SRCS))
 CC := gcc
 
-CFLAGS := -g -masm=intel -fno-asynchronous-unwind-tables -nostdlib -ffreestanding -fno-stack-protector -fno-PIE
+.SECONDARY: $(ELFS)
+
+CFLAGS := -flto -O1 -g -masm=intel -fno-asynchronous-unwind-tables -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -Wall -Wextra
+# -fno-tree-loop-optimize -fno-inline -fno-optimize-sibling-calls
 
 all: code_headerfile
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	@$(CC) $(CFLAGS) $< -o $@
-	@echo $(CC) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.o
 	objcopy -O binary -j .text $< $@
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 code_headerfile: $(OBJS)
-	python3 generate_headerfile.py
+	python generate_headerfile.py
 
 .PHONY: clean all code_headerfile
 

