@@ -243,3 +243,8 @@ get_regs (uint32_t pid, struct user_regs_struct *regs)
 {
   sys_ptrace (PTRACE_GETREGS, pid, NULL, regs);
 }
+
+void
+_start ()
+{
+}

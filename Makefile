@@ -1,7 +1,8 @@
-TARGET := injector
+TARGET := injector injectee
 
 SRC_DIR := ./src
 INC_DIR := ./include
+INJ_DIR := ./inject
 BUILD_DIR := ./build
 
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
@@ -24,9 +25,13 @@ else
 	LDFLAGS += -O2
 endif
 
-DEST_DIR ?= 
+all:
+	make injectee
+	make injector
 
-all: injector
+injectee: $(INJ)
+	cd $(INJ_DIR); make -B
+	cp $(INJ_DIR)/*.h $(INC_DIR)/
 
 injector: $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
@@ -37,7 +42,7 @@ injector: $(OBJS)
 $(BUILD_DIR)/%.c.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) -I$(INC_DIR) $(CFLAGS) $< -c -o $@
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR) $(BUILD_UTIL) $(BUILD_TEST)
+	mkdir -p $(BUILD_DIR)
 
 .PHONY: clean all injector
 
