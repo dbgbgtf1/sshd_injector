@@ -2,6 +2,7 @@
 #include <netinet/in.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
+#include <sys/socket.h>
 #include <syscall.h>
 
 __always_inline void *get_rw_addr ();
@@ -42,7 +43,7 @@ get_rw_addr ()
 }
 
 void
-_start ()
+_start (int fd, struct sockaddr *restrict addr, socklen_t *restrict addr_len)
 {
-  accept_hook (0, 0, 0);
+  accept_hook(fd, addr, addr_len);
 }
