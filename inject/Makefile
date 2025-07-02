@@ -10,8 +10,8 @@ CC := gcc
 
 .SECONDARY: $(ELFS)
 
-CFLAGS := -flto -O1 -g -masm=intel -fno-asynchronous-unwind-tables -nostdlib -ffreestanding -fno-stack-protector -fno-PIE -Wall -Wextra
-# -fno-tree-loop-optimize -fno-inline -fno-optimize-sibling-calls
+CFLAGS := -flto -O1 -g -masm=intel -fno-asynchronous-unwind-tables -nostdlib -ffreestanding -fno-stack-protector -Wall -Wextra
+# -fno-PIE -fno-toplevel-reorder -fno-tree-loop-optimize -fno-inline -fno-optimize-sibling-calls
 
 all: code_headerfile
 
