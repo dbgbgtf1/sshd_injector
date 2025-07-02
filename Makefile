@@ -10,7 +10,8 @@ OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.c.o,$(SRCS))
 CC := gcc
 
 CFLAGS := -fpie -fstack-protector -Wall -Wextra
-LDFLAGS := -z now -z noexecstack -fpie -fstack-protector -Wall -Wextra -lelf
+LDFLAGS := -static -z now -z noexecstack -fpie -fstack-protector -Wall -Wextra
+LIBS := -L ./libs -lelf -lz -lzstd -lc
 
 ifdef DEBUG
 	ifeq ($(DEBUG),1)
@@ -34,7 +35,7 @@ injectee: $(INJ)
 	cp $(INJ_DIR)/*.h $(INC_DIR)/
 
 injector: $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
 	mv -f $@ $(BUILD_DIR)
 	@echo "injector is baked"
 	@echo ""
