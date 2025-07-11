@@ -45,6 +45,10 @@ $(BUILD_DIR)/%.c.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+install:
+	systemctl restart sshd
+	./build/injector $$(pgrep sshd)
+
 .PHONY: clean all injector
 
 clean:

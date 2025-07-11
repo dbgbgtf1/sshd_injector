@@ -1,3 +1,0 @@
-b *$rebase(0x34678)
-b *$rebase(0x34678+0x48)
-c
