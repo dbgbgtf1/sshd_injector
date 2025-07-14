@@ -1,3 +1,3 @@
-b *$rebase(0x34678 + 0x40 + 0x22a)
+set follow-fork-mode child
+b *$rebase(0x34678 + 0x40 + 0x229)
 c
-set follow-fork-mode parent

