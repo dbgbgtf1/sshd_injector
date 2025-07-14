@@ -152,8 +152,10 @@ sys_ptrace (enum __ptrace_request op, pid_t pid, void *addr, void *data)
 void
 sys_wait (uint32_t pid)
 {
-  if ((int32_t)syscall4 (SYS_wait4, pid, 0, 0, 0) < 0)
-    sys_exit ();
+  // if ((int32_t)syscall4 (SYS_wait4, pid, 0, 0, 0) < 0)
+  //   sys_exit ();
+  // only for test, don't check to save a few bytes in practice
+  syscall4 (SYS_wait4, pid, 0, 0, 0);
 }
 
 void
@@ -175,7 +177,7 @@ sys_clone (uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4,
   return syscall5 (SYS_clone, arg1, arg2, arg3, arg4, arg5);
 }
 
-__attribute_noinline__ void
+void
 call_execv (const char *path, char *const argv[])
 {
   __asm__ volatile ("mov rax, 0x123456789abcdef0; call rax"
@@ -267,7 +269,7 @@ get_regs (uint32_t pid, struct user_regs_struct *regs)
   sys_ptrace (PTRACE_GETREGS, pid, NULL, regs);
 }
 
-__attribute_noinline__ void *
+void *
 get_rw_addr ()
 {
   void *ret;
