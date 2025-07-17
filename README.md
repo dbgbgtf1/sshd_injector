@@ -35,7 +35,6 @@ make
 ```bash
 ./build/injector $(pgrep sshd)
 ```
-**Note:** Do not run the injector multiple times on the same process. *(TODO: In the future, I will try to solve this for hot-reloading the backdoor.)*
 
 ---
 

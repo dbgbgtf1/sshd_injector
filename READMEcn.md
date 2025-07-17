@@ -35,7 +35,6 @@ make
 ```bash
 ./build/injector $(pgrep sshd)
 ```
-**注意：** 不要对同一个进程多次运行该注入器。*（TODO：后续我会尝试解决以做到热重启后门）*
 
 ---
 

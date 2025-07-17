@@ -18,7 +18,7 @@ get_got_offset (const char *elf_file, const char *func_name)
 
   Elf *elf = elf_begin (fd, ELF_C_READ, NULL);
   if (!elf)
-    PERROR ("elf begine");
+    PERROR ("elf begin");
 
   uint64_t shstrndx;
   if (elf_getshdrstrndx (elf, &shstrndx) != 0)
