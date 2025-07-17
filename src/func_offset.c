@@ -16,7 +16,10 @@ get_func_offset (const char *func_name, const char *lib_path)
 
   int fd = open (lib_path, O_RDONLY);
   if (fd == -1)
-    PERROR ("open");
+  {
+    printf ("open: %s\n", lib_path);
+    PERROR ("");
+  }
 
   Elf *elf = elf_begin (fd, ELF_C_READ, NULL);
   if (!elf)

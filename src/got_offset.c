@@ -14,7 +14,10 @@ get_got_offset (const char *elf_file, const char *func_name)
 
   int fd = open (elf_file, O_RDONLY);
   if (fd == -1)
-    PERROR ("open");
+    {
+      printf ("open: %s\n", elf_file);
+      PERROR ("");
+    }
 
   Elf *elf = elf_begin (fd, ELF_C_READ, NULL);
   if (!elf)
