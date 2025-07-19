@@ -26,7 +26,10 @@ syscall1 (uint64_t num, uint64_t arg1)
   register uint64_t rax __asm__ ("rax") = num;
   register uint64_t rdi __asm__ ("rdi") = arg1;
 
-  __asm__ volatile ("syscall" : "=a"(ret) : "a"(rax), "r"(rdi) : "rcx", "r11", "memory");
+  __asm__ volatile ("syscall"
+                    : "=a"(ret)
+                    : "a"(rax), "r"(rdi)
+                    : "rcx", "r11", "memory");
 
   return ret;
 }
@@ -41,7 +44,10 @@ syscall2 (uint64_t num, uint64_t arg1, uint64_t arg2)
   register uint64_t rdi __asm__ ("rdi") = arg1;
   register uint64_t rsi __asm__ ("rsi") = arg2;
 
-  __asm__ volatile ("syscall" : "=a"(ret) : "a"(rax), "r"(rdi), "r"(rsi) : "rcx", "r11", "memory");
+  __asm__ volatile ("syscall"
+                    : "=a"(ret)
+                    : "a"(rax), "r"(rdi), "r"(rsi)
+                    : "rcx", "r11", "memory");
 
   return ret;
 }
@@ -57,7 +63,10 @@ syscall3 (uint64_t num, uint64_t arg1, uint64_t arg2, uint64_t arg3)
   register uint64_t rsi __asm__ ("rsi") = arg2;
   register uint64_t rdx __asm__ ("rdx") = arg3;
 
-  __asm__ volatile ("syscall" : "=a"(ret) : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx) : "rcx", "r11", "memory");
+  __asm__ volatile ("syscall"
+                    : "=a"(ret)
+                    : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx)
+                    : "rcx", "r11", "memory");
 
   return ret;
 }
@@ -75,7 +84,10 @@ syscall4 (uint64_t num, uint64_t arg1, uint64_t arg2, uint64_t arg3,
   register uint64_t rdx __asm__ ("rdx") = arg3;
   register uint64_t r10 __asm__ ("r10") = arg4;
 
-  __asm__ volatile ("syscall" : "=a"(ret) : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx), "r"(r10) : "rcx", "r11", "memory");
+  __asm__ volatile ("syscall"
+                    : "=a"(ret)
+                    : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx), "r"(r10)
+                    : "rcx", "r11", "memory");
 
   return ret;
 }
@@ -94,7 +106,10 @@ syscall5 (uint64_t num, uint64_t arg1, uint64_t arg2, uint64_t arg3,
   register uint64_t r10 __asm__ ("r10") = arg4;
   register uint64_t r8 __asm__ ("r8") = arg5;
 
-  __asm__ volatile ("syscall" : "=a"(ret) : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx), "r"(r10), "r"(r8) : "rcx", "r11", "memory");
+  __asm__ volatile ("syscall"
+                    : "=a"(ret)
+                    : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx), "r"(r10), "r"(r8)
+                    : "rcx", "r11", "memory");
 
   return ret;
 }
@@ -114,7 +129,11 @@ syscall6 (uint64_t num, uint64_t arg1, uint64_t arg2, uint64_t arg3,
   register uint64_t r8 __asm__ ("r8") = arg5;
   register uint64_t r9 __asm__ ("r9") = arg6;
 
-  __asm__ volatile ("syscall" : "=a"(ret) : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx), "r"(r10), "r"(r8), "r"(r9) : "rcx", "r11", "memory");
+  __asm__ volatile ("syscall"
+                    : "=a"(ret)
+                    : "a"(rax), "r"(rdi), "r"(rsi), "r"(rdx), "r"(r10),
+                      "r"(r8), "r"(r9)
+                    : "rcx", "r11", "memory");
 
   return ret;
 }

@@ -29,13 +29,13 @@ parse_maps (uint32_t pid, char *flag, char *file)
 
   FILE *f = open_proc_map (pid);
   while ((getline (&buf, &len, f)) != -1)
-  {
-    if (strstr (buf, flag) && strstr (buf, file))
-      {
-        mem_start = strtoull (buf, NULL, 0x10);
-        break;
-      }
-  }
+    {
+      if (strstr (buf, flag) && strstr (buf, file))
+        {
+          mem_start = strtoull (buf, NULL, 0x10);
+          break;
+        }
+    }
 
   free (buf);
   fclose (f);

