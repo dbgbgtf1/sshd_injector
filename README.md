@@ -33,12 +33,12 @@ make
 ### 2. 注入 sshd
 
 ```bash
-./build/injector $(pgrep sshd)
+./injector $(pgrep sshd)
 ```
 
 如果使用时 sshd 路径或相关依赖库路径不同，也可以在命令后跟参数指定：
 ```bash
-./build/injector <sshd-master-pid> [sshd-path libc-path ]
+./injector <sshd-master-pid> [sshd-path libc-path ]
 ```
 默认路径如下：
 - sshd: `/usr/bin/sshd`
