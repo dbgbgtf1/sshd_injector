@@ -2,9 +2,10 @@ a.out
 test.c
 .gdb_history
 __pycache__
-include/inject_code.h
-include/seg_gaps.h
-include/got_offset.h
+include/sshd_accept_hook.h
+inject/sshd_accept_hook.h
+include/sshd_execv_hook.h
+inject/sshd_execv_hook.h
 .cache
 build/
 inject/build
