@@ -55,7 +55,7 @@ preprocess_code ()
 
   char *get_rw = GET_RW;
   uint64_t sshd_rw_start = sshd_base + get_seg_gap (sshd_path, 6);
-  printf ("[INFO]: sshd_rw_start: %lx\n", sshd_rw_start);
+  printf ("[INFO]: sshd_rw_start: 0x%lx\n", sshd_rw_start);
 
   get_rw = memmem (sshd_accept, sizeof (sshd_accept), get_rw, 0xa);
   memcpy (&get_rw[2], &sshd_rw_start, 0x8);

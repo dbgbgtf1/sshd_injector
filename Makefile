@@ -36,7 +36,6 @@ injectee: $(INJ)
 
 injector: $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
-	mv -f $@ $(BUILD_DIR)
 	@echo "injector is baked"
 	@echo ""
 
@@ -47,7 +46,7 @@ $(BUILD_DIR):
 
 install:
 	systemctl restart sshd
-	./build/injector $$(pgrep sshd)
+	./injector $$(pgrep sshd)
 
 .PHONY: clean all injector
 

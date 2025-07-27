@@ -33,14 +33,16 @@ inject_start (int32_t pid, uint64_t code_size)
       if (!strstr (buf, "r-xp"))
         continue;
 
-      uint64_t rx_start = 0;
       uint64_t rx_gap = new_rx_gap (buf);
       if (code_size > rx_gap)
         continue;
-      rx_start = strtoull (buf, NULL, 0x10);
-      printf ("[INFO]: injecting to %s\n", buf);
+      char *end;
+      uint64_t rx_start = strtoull (buf, &end, 0x10);
+      uint64_t rx_end = strtoull (end + 1, NULL, 0x10);
+      printf ("[INFO]: inject rx seg \n%s\n", buf);
       printf ("[INFO]: rx_gap: 0x%lx\n", rx_gap);
-      return rx_gap + rx_start;
+      printf ("[INFO]: inject to 0x%lx\n", rx_end - rx_gap);
+      return rx_end - rx_gap;
     }
 
   PEXIT ("[ERROR]: no enough rx to inject the code");

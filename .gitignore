@@ -6,3 +6,5 @@ include/inject_code.h
 include/seg_gaps.h
 include/got_offset.h
 .cache
+build/
+inject/build
